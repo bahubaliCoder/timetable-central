@@ -1,5 +1,8 @@
 # TimeTable Central – Class Schedule & Academic Planner
 
+> 🚀 **Live Demo**: [https://bahubalicoder.github.io/timetable-central/](https://bahubalicoder.github.io/timetable-central/)  
+> 📦 **GitHub Repo**: [https://github.com/bahubaliCoder/timetable-central](https://github.com/bahubaliCoder/timetable-central)
+
 A modern, responsive, and feature-complete web application designed for students, faculty, and academic departments to visualize, schedule, track attendance, and export university/school timetables.
 
 Built with **React + Vite + Tailwind CSS + Lucide Icons**.
