@@ -147,16 +147,27 @@ export const SubjectsPage = () => {
                 Department: <strong>{s.department}</strong>
               </p>
 
-              <div className="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <div className="grid grid-cols-3 gap-2 text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center">
                 <div>
                   <span className="text-slate-400 block text-[10px]">CREDITS</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{s.credits} Credits</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{s.credits}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">WEEKLY HOURS</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{s.hoursPerWeek} hrs/wk</span>
+                  <span className="text-slate-400 block text-[10px]">L - T - P</span>
+                  <span className="font-bold font-mono text-blue-600 dark:text-blue-400">{s.ltp || '3-0-0'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">HOURS</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{s.hoursPerWeek}/wk</span>
                 </div>
               </div>
+
+              {s.facultyName && (
+                <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mt-2.5 flex items-center gap-1.5 truncate">
+                  <span>👨‍🏫</span>
+                  <span className="truncate">{s.facultyName}</span>
+                </div>
+              )}
             </div>
 
             {isFaculty && (

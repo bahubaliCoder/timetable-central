@@ -15,6 +15,9 @@ import {
   X,
   Layers,
   ChevronDown,
+  BookOpen,
+  School,
+  GraduationCap,
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { ClassScheduleModal } from '../components/ClassScheduleModal';
@@ -42,6 +45,7 @@ export const TimetablePage = () => {
     addNotification,
     isStudent,
     isFaculty,
+    institutionInfo,
   } = useAdmin();
 
   // Modals
@@ -296,27 +300,50 @@ export const TimetablePage = () => {
       {/* Master Timetable Grid */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden timetable-print-container">
         
-        {/* Printable Header */}
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <div>
-            <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">
-              {activeClassInfo?.name} • {activeClassInfo?.section} Timetable
-            </h3>
-            <p className="text-xs text-slate-400">
-              Department of {activeClassInfo?.department} • {activeClassInfo?.semester}
+        {/* Printable Official Institutional Header (as shown in Photo) */}
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-blue-50/50 via-white to-purple-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+          <div className="text-center max-w-2xl mx-auto space-y-1">
+            <div className="inline-flex items-center justify-center gap-2 mb-0.5">
+              <span className="p-2 rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                <School className="w-5 h-5" />
+              </span>
+              <h2 className="font-black text-lg sm:text-xl text-slate-900 dark:text-white tracking-wide uppercase">
+                {institutionInfo?.name || 'GOVERNMENT ENGINEERING COLLEGE, BANKA'}
+              </h2>
+            </div>
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+              {institutionInfo?.subName || 'Lakrikola, P.O. Manjira, Banka - 813102'}
             </p>
+            <div className="pt-1">
+              <span className="inline-block text-xs font-bold text-blue-700 dark:text-blue-300 underline tracking-wide uppercase">
+                {institutionInfo?.academicTitle || 'TIME TABLE FOR ACADEMIC YEAR 2025-2026 (w.e.f. 01-07-2026)'}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs">
-            <span className="flex items-center gap-1.5 text-slate-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span> Core
-            </span>
-            <span className="flex items-center gap-1.5 text-slate-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span> Lab
-            </span>
-            <span className="flex items-center gap-1.5 text-slate-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 inline-block"></span> Elective
-            </span>
+          {/* Program & Room Header Banner */}
+          <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-black text-slate-800 dark:text-slate-200 bg-white/80 dark:bg-slate-800/60 p-3 rounded-2xl shadow-inner">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+              <span>CLASS: <strong className="text-blue-600 dark:text-blue-400">B.TECH</strong></span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span>SEMESTER: <strong className="text-purple-600 dark:text-purple-400">VI</strong></span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span>BRANCH: <strong className="text-emerald-600 dark:text-emerald-400">CSE</strong></span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span>ROOM NO.: <strong className="text-amber-600 dark:text-amber-400">404</strong></span>
+            </div>
+
+            <div className="flex items-center space-x-3 text-[11px] font-bold">
+              <span className="flex items-center gap-1 text-slate-500">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span> Theory
+              </span>
+              <span className="flex items-center gap-1 text-slate-500">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span> Lab
+              </span>
+              <span className="flex items-center gap-1 text-slate-500">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Elective
+              </span>
+            </div>
           </div>
         </div>
 
@@ -390,6 +417,7 @@ export const TimetablePage = () => {
                       const teacher = teacherMap[slot.teacherId];
                       const room = roomMap[slot.roomId];
                       const subjectColor = subject?.color || '#3b82f6';
+                      const displayCode = slot.displayLabel || (teacher?.shortCode ? `${subject?.shortCode || subject?.code} [${teacher?.shortCode}]` : (subject?.shortCode || subject?.code));
 
                       return (
                         <td
@@ -407,29 +435,35 @@ export const TimetablePage = () => {
                             <div>
                               <div className="flex items-center justify-between gap-1 mb-1">
                                 <span
-                                  className="font-extrabold text-xs truncate"
+                                  className="font-black text-xs truncate"
                                   style={{ color: subjectColor }}
+                                  title={displayCode}
                                 >
-                                  {subject?.code || 'SUB'}
+                                  {displayCode}
                                 </span>
                                 <span
-                                  className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded text-white"
+                                  className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded text-white shrink-0"
                                   style={{ backgroundColor: subjectColor }}
                                 >
                                   {slot.type}
                                 </span>
                               </div>
 
-                              <h4 className="font-bold text-[11px] text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug">
+                              <h4 className="font-bold text-[11px] text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug" title={subject?.name}>
                                 {subject?.name || 'Subject'}
                               </h4>
                             </div>
 
                             <div className="space-y-0.5 text-[10px] text-slate-600 dark:text-slate-400 pt-1 border-t border-black/5 dark:border-white/5">
-                              <div className="truncate font-medium">
-                                👨‍🏫 {teacher?.name || 'TBD'}
+                              <div className="truncate font-semibold flex items-center justify-between">
+                                <span className="truncate">👨‍🏫 {teacher?.name || 'TBD'}</span>
+                                {teacher?.shortCode && (
+                                  <span className="font-mono text-[9px] bg-slate-200/80 dark:bg-slate-700 px-1 rounded font-bold shrink-0 ml-1">
+                                    [{teacher.shortCode}]
+                                  </span>
+                                )}
                               </div>
-                              <div className="truncate">
+                              <div className="truncate font-medium text-slate-500">
                                 🚪 {room?.name || 'TBD'}
                               </div>
                             </div>
@@ -473,6 +507,69 @@ export const TimetablePage = () => {
             </tbody>
 
           </table>
+        </div>
+
+        {/* Official Subject, L-T-P & Faculty Allocation Reference Table (As in Photo) */}
+        <div className="border-t border-slate-200 dark:border-slate-800 p-5 sm:p-6 bg-slate-50/50 dark:bg-slate-900/40">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>Official Subject, L-T-P & Faculty Allocation Matrix</span>
+            </h4>
+            <span className="text-[11px] font-semibold text-slate-400">
+              Government Engineering College, Banka • w.e.f. 01-07-2026
+            </span>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+            <table className="w-full text-xs text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-extrabold border-b border-slate-200 dark:border-slate-800">
+                  <th className="py-2.5 px-4 w-32 border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider">
+                    CODE
+                  </th>
+                  <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider">
+                    SUBJECT
+                  </th>
+                  <th className="py-2.5 px-4 w-28 text-center border-r border-slate-200 dark:border-slate-800 uppercase tracking-wider">
+                    L - T - P
+                  </th>
+                  <th className="py-2.5 px-4 uppercase tracking-wider">
+                    FACULTY NAME
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-200">
+                {subjects.map((sub) => (
+                  <tr key={sub.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="py-2.5 px-4 font-black font-mono text-slate-900 dark:text-white border-r border-slate-200 dark:border-slate-800">
+                      {sub.code}
+                    </td>
+                    <td className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                          style={{ backgroundColor: sub.color || '#3b82f6' }}
+                        />
+                        <span className="font-bold text-slate-900 dark:text-slate-100">{sub.name}</span>
+                        {sub.shortCode && sub.shortCode !== sub.code && (
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            {sub.shortCode}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-4 text-center font-mono font-black text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-800">
+                      {sub.ltp || '3-0-0'}
+                    </td>
+                    <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">
+                      {sub.facultyName || 'TBD'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>

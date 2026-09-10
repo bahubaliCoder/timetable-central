@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
+  INSTITUTION_INFO,
   INITIAL_TEACHERS,
   INITIAL_SUBJECTS,
   INITIAL_ROOMS,
@@ -14,7 +15,7 @@ import { findTimetableConflicts } from '../utils/conflictChecker';
 
 const AdminContext = createContext();
 
-const STORAGE_PREFIX = 'ttc_inst_v1_';
+const STORAGE_PREFIX = 'ttc_gecb_v2_';
 
 export const AdminProvider = ({ children }) => {
   // 1. Navigation & Role State
@@ -537,6 +538,7 @@ export const AdminProvider = ({ children }) => {
         notifications,
         addNotification,
         markAllNotificationsRead,
+        institutionInfo: INSTITUTION_INFO,
         resetToDemoPreset,
       }}
     >

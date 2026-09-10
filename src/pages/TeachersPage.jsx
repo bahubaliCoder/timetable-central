@@ -35,6 +35,11 @@ export const TeachersPage = () => {
     updateTeacher,
     deleteTeacher,
     timetables,
+    periods,
+    subjects,
+    rooms,
+    days,
+    setActivePage,
     isFaculty,
     isStudent,
     currentUser,
@@ -49,8 +54,9 @@ export const TeachersPage = () => {
 
   const [formData, setFormData] = useState({
     name: '',
+    shortCode: '',
     email: '',
-    department: 'Computer Science',
+    department: 'Computer Science & Engineering',
     designation: 'Assistant Professor',
     phone: '',
     maxHours: 18,
@@ -64,8 +70,9 @@ export const TeachersPage = () => {
     setEditingTeacher(null);
     setFormData({
       name: '',
+      shortCode: '',
       email: '',
-      department: departments[0] || 'Computer Science',
+      department: departments[0] || 'Computer Science & Engineering',
       designation: 'Assistant Professor',
       phone: '',
       maxHours: 18,
@@ -79,6 +86,7 @@ export const TeachersPage = () => {
     setEditingTeacher(t);
     setFormData({
       ...t,
+      shortCode: t.shortCode || '',
       avatar: t.avatar || PRESET_AVATARS[0],
     });
     setModalOpen(true);
@@ -125,6 +133,11 @@ export const TeachersPage = () => {
     }
   };
 
+  // Lookup maps for fast access
+  const subjectMap = Object.fromEntries(subjects.map((s) => [s.id, s]));
+  const roomMap = Object.fromEntries(rooms.map((r) => [r.id, r]));
+  const periodMap = Object.fromEntries(periods.map((p) => [p.id, p]));
+
   // Compute teacher workload across all timetables
   const getTeacherWorkload = (tId) => {
     let count = 0;
@@ -134,6 +147,42 @@ export const TeachersPage = () => {
       }
     });
     return count;
+  };
+
+  // Compute allocated weekly time periods for a specific teacher
+  const getTeacherPeriods = (tId) => {
+    const list = [];
+    Object.values(timetables).forEach((slots) => {
+      if (Array.isArray(slots)) {
+        slots
+          .filter((s) => s.teacherId === tId)
+          .forEach((s) => {
+            const p = periodMap[s.periodId];
+            const sub = subjectMap[s.subjectId];
+            const rm = roomMap[s.roomId];
+            list.push({
+              id: s.id,
+              day: s.day,
+              periodName: p?.name || s.periodId,
+              time: p ? `${p.startTime} - ${p.endTime}` : '',
+              subjectCode: sub?.shortCode || sub?.code || 'Subject',
+              subjectName: sub?.name || 'Subject',
+              subjectColor: sub?.color || '#3b82f6',
+              roomName: rm?.name || 'Room',
+              type: s.type || 'Lecture',
+              displayLabel: s.displayLabel,
+            });
+          });
+      }
+    });
+
+    const dayOrder = Object.fromEntries((days || []).map((d, idx) => [d, idx]));
+    list.sort((a, b) => {
+      const dDiff = (dayOrder[a.day] ?? 99) - (dayOrder[b.day] ?? 99);
+      if (dDiff !== 0) return dDiff;
+      return (a.time || '').localeCompare(b.time || '');
+    });
+    return list;
   };
 
   const filteredTeachers = teachers.filter((t) => {
@@ -218,6 +267,7 @@ export const TeachersPage = () => {
           const workload = getTeacherWorkload(t.id);
           const maxH = t.maxHours || 20;
           const pct = Math.min(100, Math.round((workload / maxH) * 100));
+          const scheduledPeriods = getTeacherPeriods(t.id);
 
           return (
             <div
@@ -246,10 +296,17 @@ export const TeachersPage = () => {
                     </div>
 
                     <div>
-                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                        {t.name}
-                      </h4>
-                      <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                          {t.name}
+                        </h4>
+                        {t.shortCode && (
+                          <span className="px-2 py-0.5 rounded-lg text-xs font-black bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-mono border border-purple-200 dark:border-purple-800">
+                            [{t.shortCode}]
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold mt-0.5">
                         {t.designation}
                       </p>
                     </div>
@@ -274,6 +331,56 @@ export const TeachersPage = () => {
                   <div className="pt-1 font-semibold text-slate-700 dark:text-slate-300">
                     Dept: {t.department}
                   </div>
+                </div>
+
+                {/* Allocated Teaching Periods List (from Photo) */}
+                <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Assigned Periods ({scheduledPeriods.length})</span>
+                    </span>
+                    <button
+                      onClick={() => setActivePage('timetable')}
+                      className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      View Grid →
+                    </button>
+                  </div>
+
+                  {scheduledPeriods.length > 0 ? (
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                      {scheduledPeriods.map((sp, idx) => (
+                        <div
+                          key={sp.id || idx}
+                          className="flex items-center justify-between p-1.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-[11px]"
+                        >
+                          <div className="flex items-center gap-1.5 truncate">
+                            <span className="font-extrabold text-slate-900 dark:text-white shrink-0">
+                              {sp.day.slice(0, 3)}:
+                            </span>
+                            <span className="font-mono text-slate-500 dark:text-slate-400 shrink-0 text-[10px]">
+                              {sp.time}
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-600">•</span>
+                            <span
+                              className="font-bold truncate"
+                              style={{ color: sp.subjectColor }}
+                            >
+                              {sp.displayLabel || sp.subjectCode}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 shrink-0 ml-1.5 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-slate-800">
+                            {sp.roomName}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-[11px] text-slate-400 text-center">
+                      No schedule periods assigned yet
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -482,14 +589,27 @@ export const TeachersPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                    Initials / Code
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. RR, MA, NZ"
+                    value={formData.shortCode || ''}
+                    onChange={(e) => setFormData({ ...formData, shortCode: e.target.value.toUpperCase() })}
+                    className="w-full text-xs font-mono font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
                     Phone Number
                   </label>
                   <input
                     type="text"
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="+91 98350 00000"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-500"
@@ -508,6 +628,46 @@ export const TeachersPage = () => {
                   />
                 </div>
               </div>
+
+              {/* Teaching Schedule Breakdown in Modal */}
+              {editingTeacher && (
+                <div className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-purple-600" />
+                      Current Assigned Schedule ({getTeacherPeriods(editingTeacher.id).length} Periods)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalOpen(false);
+                        setActivePage('timetable');
+                      }}
+                      className="text-[11px] font-bold text-purple-700 dark:text-purple-300 hover:underline"
+                    >
+                      Open Grid to Edit →
+                    </button>
+                  </div>
+                  <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                    {getTeacherPeriods(editingTeacher.id).map((sp, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-[11px] p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60"
+                      >
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">
+                          {sp.day.slice(0, 3)}: {sp.time}
+                        </span>
+                        <span className="font-bold text-purple-600 dark:text-purple-400">
+                          {sp.displayLabel || sp.subjectCode} ({sp.roomName})
+                        </span>
+                      </div>
+                    ))}
+                    {getTeacherPeriods(editingTeacher.id).length === 0 && (
+                      <p className="text-[11px] text-slate-400">No scheduled periods currently.</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
