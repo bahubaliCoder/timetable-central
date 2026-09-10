@@ -1,3 +1,5 @@
+import rupaliKumariImg from '../assets/rupali-kumari.png';
+
 export const INSTITUTION_INFO = {
   name: 'GOVERNMENT ENGINEERING COLLEGE, BANKA',
   subName: 'Lakrikola, P.O. Manjira, Banka - 813102',
@@ -68,7 +70,7 @@ export const INITIAL_TEACHERS = [
     department: 'Computer Science & Engineering',
     designation: 'Professor & Head of Department (HOD)',
     phone: '+91 98350 11005',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    avatar: rupaliKumariImg,
     maxHours: 16,
     status: 'Active',
     subjectsTaught: 'PE-II: Web and Internet Technology (105614)',
@@ -597,7 +599,7 @@ export const INITIAL_USERS = [
     password: 'admin123',
     role: 'Admin',
     department: 'Computer Science & Engineering',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    avatar: rupaliKumariImg,
     institution: 'Government Engineering College, Banka',
     designation: 'Professor, Head of Department (HOD) & Admin',
     phone: '+91 98350 11005',

@@ -20,10 +20,11 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
+import rupaliKumariImg from '../assets/rupali-kumari.png';
 
 const PRESET_AVATARS = [
+  rupaliKumariImg,
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
