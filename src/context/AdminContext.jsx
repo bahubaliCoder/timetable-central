@@ -15,7 +15,7 @@ import { findTimetableConflicts } from '../utils/conflictChecker';
 
 const AdminContext = createContext();
 
-const STORAGE_PREFIX = 'ttc_gecb_v4_';
+const STORAGE_PREFIX = 'ttc_gecb_v5_';
 
 export const AdminProvider = ({ children }) => {
   // 1. Navigation & Role State

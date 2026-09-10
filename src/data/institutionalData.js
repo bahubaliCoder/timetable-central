@@ -1,4 +1,6 @@
 import rupaliKumariImg from '../assets/rupali-kumari.png';
+import raviRanjanImg from '../assets/ravi-ranjan.png';
+import nadiyaZafarImg from '../assets/nadiya-zafar.png';
 
 export const INSTITUTION_INFO = {
   name: 'GOVERNMENT ENGINEERING COLLEGE, BANKA',
@@ -10,6 +12,20 @@ export const INSTITUTION_INFO = {
 
 export const INITIAL_TEACHERS = [
   {
+    id: 't-rk',
+    name: 'Prof. Rupali Kumari',
+    shortCode: 'RK',
+    email: 'rupali.kumari@gecbanka.ac.in',
+    department: 'Computer Science & Engineering',
+    designation: 'Professor & Head of Department (HOD)',
+    phone: '+91 98350 11005',
+    avatar: rupaliKumariImg,
+    isPinned: true,
+    maxHours: 16,
+    status: 'Active',
+    subjectsTaught: 'PE-II: Web and Internet Technology (105614)',
+  },
+  {
     id: 't-rr',
     name: 'Asst. Prof. Ravi Ranjan',
     shortCode: 'RR',
@@ -17,7 +33,7 @@ export const INITIAL_TEACHERS = [
     department: 'Computer Science & Engineering',
     designation: 'Assistant Professor',
     phone: '+91 98350 11001',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    avatar: raviRanjanImg,
     maxHours: 18,
     status: 'Active',
     subjectsTaught: 'Computer Networks (100602), Computer Networks Lab (100602 P)',
@@ -44,7 +60,7 @@ export const INITIAL_TEACHERS = [
     department: 'Computer Science & Engineering',
     designation: 'Assistant Professor',
     phone: '+91 98350 11003',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    avatar: nadiyaZafarImg,
     maxHours: 16,
     status: 'Active',
     subjectsTaught: 'Machine Learning (105602)',
@@ -61,19 +77,6 @@ export const INITIAL_TEACHERS = [
     maxHours: 18,
     status: 'Active',
     subjectsTaught: 'PE-I: Introduction to Java Programming (105604), Python Programming Lab (105620 P)',
-  },
-  {
-    id: 't-rk',
-    name: 'Prof. Rupali Kumari',
-    shortCode: 'RK',
-    email: 'rupali.kumari@gecbanka.ac.in',
-    department: 'Computer Science & Engineering',
-    designation: 'Professor & Head of Department (HOD)',
-    phone: '+91 98350 11005',
-    avatar: rupaliKumariImg,
-    maxHours: 16,
-    status: 'Active',
-    subjectsTaught: 'PE-II: Web and Internet Technology (105614)',
   },
   {
     id: 't-gla',

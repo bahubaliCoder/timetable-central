@@ -15,18 +15,21 @@ import {
   Sparkles,
   GraduationCap,
   Shield,
+  Pin,
   Image as ImageIcon,
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import rupaliKumariImg from '../assets/rupali-kumari.png';
+import raviRanjanImg from '../assets/ravi-ranjan.png';
+import nadiyaZafarImg from '../assets/nadiya-zafar.png';
 
 const PRESET_AVATARS = [
   rupaliKumariImg,
+  raviRanjanImg,
+  nadiyaZafarImg,
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
 ];
 
 export const TeachersPage = () => {
@@ -186,18 +189,26 @@ export const TeachersPage = () => {
     return list;
   };
 
-  const filteredTeachers = teachers.filter((t) => {
-    if (deptFilter !== 'all' && t.department !== deptFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        t.name.toLowerCase().includes(q) ||
-        t.email.toLowerCase().includes(q) ||
-        t.department.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  const filteredTeachers = [...teachers]
+    .filter((t) => {
+      if (deptFilter !== 'all' && t.department !== deptFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return (
+          t.name.toLowerCase().includes(q) ||
+          t.email.toLowerCase().includes(q) ||
+          t.department.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const isPinnedA = a.id === 't-rk' || a.isPinned || a.designation?.includes('HOD');
+      const isPinnedB = b.id === 't-rk' || b.isPinned || b.designation?.includes('HOD');
+      if (isPinnedA && !isPinnedB) return -1;
+      if (!isPinnedA && isPinnedB) return 1;
+      return 0;
+    });
 
   return (
     <div className="space-y-6 pb-8">
@@ -269,13 +280,31 @@ export const TeachersPage = () => {
           const maxH = t.maxHours || 20;
           const pct = Math.min(100, Math.round((workload / maxH) * 100));
           const scheduledPeriods = getTeacherPeriods(t.id);
+          const isPinned = t.id === 't-rk' || t.isPinned || t.designation?.includes('HOD');
 
           return (
             <div
               key={t.id}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-purple-300 dark:hover:border-purple-800 transition-all flex flex-col justify-between"
+              className={`bg-white dark:bg-slate-900 rounded-3xl p-5 border shadow-sm transition-all flex flex-col justify-between ${
+                isPinned
+                  ? 'border-purple-300 dark:border-purple-700 ring-2 ring-purple-500/25 bg-gradient-to-br from-purple-50/30 via-white to-white dark:from-purple-950/20 dark:via-slate-900 dark:to-slate-900 shadow-purple-500/5'
+                  : 'border-slate-200/80 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-800'
+              }`}
             >
               <div>
+                {/* Pinned HOD Ribbon */}
+                {isPinned && (
+                  <div className="mb-3.5 -mt-1 flex items-center justify-between pb-2 border-b border-purple-100 dark:border-purple-900/40">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-600 text-white shadow-xs">
+                      <Pin className="w-3 h-3 fill-current" />
+                      <span>Pinned • Head of Department</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                      HOD / Admin
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center space-x-3.5">
                     {/* Faculty Profile Photo */}
