@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 
-export const Sidebar = () => {
+export const Sidebar = ({ onOpenLoginModal }) => {
   const {
     activePage,
     setActivePage,
@@ -32,7 +32,7 @@ export const Sidebar = () => {
     classes,
     currentUser,
     isStudent,
-    isFaculty,
+    isAdmin,
   } = useAdmin();
 
   const navItems = isStudent
@@ -42,20 +42,16 @@ export const Sidebar = () => {
         { id: 'teachers', label: 'Faculty Directory', icon: Users, count: teachers.length },
         { id: 'subjects', label: 'Course Catalog', icon: BookOpen, count: subjects.length },
         { id: 'rooms', label: 'Campus Rooms', icon: DoorOpen, count: rooms.length },
-        { id: 'roles', label: 'Roles & Access', icon: ShieldCheck },
         { id: 'profile', label: 'Student Profile', icon: UserCheck },
       ]
     : [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'dashboard', label: 'Admin Dashboard', icon: LayoutDashboard },
         { id: 'timetable', label: 'Timetable Manager', icon: Calendar, badge: 'Live' },
         { id: 'teachers', label: 'Faculty Directory', icon: Users, count: teachers.length },
         { id: 'subjects', label: 'Subject Catalog', icon: BookOpen, count: subjects.length },
         { id: 'classes', label: 'Classes & Sections', icon: School, count: classes.length },
         { id: 'rooms', label: 'Rooms & Labs', icon: DoorOpen, count: rooms.length },
-        { id: 'reports', label: 'Reports & Audits', icon: BarChart3 },
-        { id: 'roles', label: 'Roles & Access', icon: ShieldCheck },
-        { id: 'settings', label: 'Academic Settings', icon: Settings },
-        { id: 'profile', label: 'Faculty Profile', icon: UserCheck },
+        { id: 'profile', label: 'Admin Profile', icon: UserCheck },
       ];
 
   const handleNavClick = (pageId) => {
@@ -196,14 +192,18 @@ export const Sidebar = () => {
 
         {/* Footer info in sidebar */}
         {!sidebarCollapsed && (
-          <div className="p-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 shrink-0">
-            <div className="flex items-center justify-between font-medium mb-1">
-              <span>Institution Version</span>
-              <span className="font-bold text-slate-600 dark:text-slate-300">v3.5 PRO</span>
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 shrink-0 space-y-2">
+            <button
+              type="button"
+              onClick={onOpenLoginModal}
+              className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition"
+            >
+              <span>Switch Account / Sign In</span>
+            </button>
+            <div className="flex items-center justify-between font-medium text-[11px] text-slate-400">
+              <span>Time Table Central</span>
+              <span className="font-bold text-slate-500">v3.5</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-snug">
-              Central Institutional Scheduling Suite
-            </p>
           </div>
         )}
       </aside>

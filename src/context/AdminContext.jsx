@@ -57,8 +57,41 @@ export const AdminProvider = ({ children }) => {
     }
   });
 
-  const isFaculty = currentUser.role === 'Faculty';
+  const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'Super Admin';
+  const isFaculty = isAdmin || currentUser.role === 'Faculty';
   const isStudent = currentUser.role === 'Student';
+
+  const login = (identifier, password, selectedRole) => {
+    const idClean = identifier.trim().toLowerCase();
+    const user = INITIAL_USERS.find((u) => {
+      const matchRole = !selectedRole || u.role.toLowerCase() === selectedRole.toLowerCase();
+      const matchId =
+        u.email.toLowerCase() === idClean ||
+        u.username?.toLowerCase() === idClean ||
+        u.studentId?.toLowerCase() === idClean;
+      return matchRole && matchId;
+    });
+
+    if (!user) {
+      return { success: false, error: 'User ID or Email not found.' };
+    }
+
+    if (user.password !== password) {
+      return { success: false, error: 'Invalid password. Please check and try again.' };
+    }
+
+    setCurrentUser(user);
+    localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(user));
+    addNotification('Authentication Successful', `Welcome, ${user.name} (${user.role}).`, 'success');
+    return { success: true, user };
+  };
+
+  const logout = () => {
+    const studentUser = INITIAL_USERS.find((u) => u.role === 'Student') || INITIAL_USERS[1];
+    setCurrentUser(studentUser);
+    localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(studentUser));
+    addNotification('Logged Out', 'You have logged out of your session.', 'info');
+  };
 
   const updateUserProfile = (updatedFields) => {
     setCurrentUser((prev) => {
@@ -457,8 +490,11 @@ export const AdminProvider = ({ children }) => {
         currentUser,
         setCurrentUser,
         updateUserProfile,
+        isAdmin,
         isFaculty,
         isStudent,
+        login,
+        logout,
         switchRole,
         sessions,
         activeSession,

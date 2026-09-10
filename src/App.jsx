@@ -4,16 +4,13 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { LoginModal } from './components/LoginModal';
 
-// 10 Institutional Page Views
+// Core Institutional Page Views
 import { DashboardPage } from './pages/DashboardPage';
 import { TimetablePage } from './pages/TimetablePage';
 import { TeachersPage } from './pages/TeachersPage';
 import { SubjectsPage } from './pages/SubjectsPage';
 import { ClassesPage } from './pages/ClassesPage';
 import { RoomsPage } from './pages/RoomsPage';
-import { ReportsPage } from './pages/ReportsPage';
-import { RolesPage } from './pages/RolesPage';
-import { SettingsPage } from './pages/SettingsPage';
 import { ProfilePage } from './pages/ProfilePage';
 
 const AppShell = () => {
@@ -35,12 +32,6 @@ const AppShell = () => {
         return <ClassesPage />;
       case 'rooms':
         return <RoomsPage />;
-      case 'reports':
-        return <ReportsPage />;
-      case 'roles':
-        return <RolesPage />;
-      case 'settings':
-        return <SettingsPage />;
       case 'profile':
         return <ProfilePage />;
       default:
@@ -51,7 +42,7 @@ const AppShell = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-200">
       {/* Collapsible Left Navigation Sidebar */}
-      <Sidebar />
+      <Sidebar onOpenLoginModal={() => setLoginModalOpen(true)} />
 
       {/* Main Administrative App Wrapper with adaptive left padding for fixed sidebar */}
       <div
@@ -72,10 +63,10 @@ const AppShell = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 max-w-7xl mx-auto">
             <div>
               <span className="font-bold text-slate-600 dark:text-slate-300">Time Table Central</span>
-              {' '}— Online Class Schedule Management System
+              {' '}— Class Schedule Management System
             </div>
             <div className="flex items-center gap-4 text-[11px]">
-              <span>Institutional Version 2.0</span>
+              <span>Admin & Student Portal</span>
               <span>•</span>
               <span>Conflict Detection Active</span>
               <span>•</span>
@@ -83,14 +74,14 @@ const AppShell = () => {
                 onClick={() => setLoginModalOpen(true)}
                 className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
               >
-                Switch Role
+                Sign In / Switch Account
               </button>
             </div>
           </div>
         </footer>
       </div>
 
-      {/* Institutional Auth / Role Switching Modal */}
+      {/* Institutional ID & Password Login Modal */}
       <LoginModal
         isOpen={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
