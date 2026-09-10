@@ -5,13 +5,17 @@ import {
   AlertTriangle,
   Clock,
   Plus,
-  Info,
+  Edit2,
+  Copy,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useSchedule } from '../context/ScheduleContext';
 import { DAYS_OF_WEEK } from '../data/mockData';
 import { timeToMinutes, formatTimeDisplay } from '../utils/timeHelpers';
 
-const ROW_HEIGHT_PX = 72; // height for 1 hour slot in pixels
+const ROW_HEIGHT_PX = 76; // Clean, spacious height per hour
 
 export const WeeklyGrid = () => {
   const {
@@ -20,102 +24,113 @@ export const WeeklyGrid = () => {
     settings,
     setActiveModal,
     setSelectedClassForEdit,
-    currentTime,
+    duplicateClass,
+    deleteClass,
+    adjustClassTime,
   } = useSchedule();
 
   const days = settings.showWeekends ? DAYS_OF_WEEK : DAYS_OF_WEEK.slice(0, 5);
   const startHour = settings.startHour || 8;
-  const endHour = settings.endHour || 18; // 8:00 to 18:00 (6 PM)
-  const totalHours = endHour - startHour;
+  const endHour = settings.endHour || 18;
+  const totalHours = Math.max(1, endHour - startHour);
 
-  const currentDayName = DAYS_OF_WEEK[currentTime.getDay() === 0 ? 6 : currentTime.getDay() - 1];
+  // Today indicator
+  const today = new Date();
+  const currentDayName = DAYS_OF_WEEK[today.getDay() === 0 ? 6 : today.getDay() - 1];
 
-  // Hours array [8, 9, 10, ... 17]
   const hourSlots = Array.from({ length: totalHours }, (_, i) => startHour + i);
 
   const handleClassClick = (cls, e) => {
     e.stopPropagation();
     setSelectedClassForEdit(cls);
-    setActiveModal('classDetail');
+    setActiveModal('editClass');
   };
 
   const handleCellClick = (day, hour) => {
-    // Pre-fill modal with clicked day and hour
-    const startHourFormatted = String(hour).padStart(2, '0') + ':00';
-    const endHourFormatted = String(hour + 1).padStart(2, '0') + ':00';
+    const startH = String(hour).padStart(2, '0') + ':00';
+    const endH = String(Math.min(23, hour + 1)).padStart(2, '0') + ':30';
     setSelectedClassForEdit({
       day,
-      startTime: startHourFormatted,
-      endTime: endHourFormatted,
+      startTime: startH,
+      endTime: endH,
       type: 'Lecture',
       color: '#6366f1',
     });
     setActiveModal('addClass');
   };
 
+  const handleDuplicate = (cls, e) => {
+    e.stopPropagation();
+    // Default to next day
+    const currentIndex = days.indexOf(cls.day);
+    const nextDay = days[(currentIndex + 1) % days.length];
+    duplicateClass(cls.id, nextDay);
+  };
+
+  const handleDelete = (cls, e) => {
+    e.stopPropagation();
+    if (confirm(`Remove ${cls.code}: ${cls.title}?`)) {
+      deleteClass(cls.id);
+    }
+  };
+
+  const handleNudgeTime = (cls, deltaMin, e) => {
+    e.stopPropagation();
+    adjustClassTime(cls.id, deltaMin);
+  };
+
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 overflow-hidden timetable-print-container">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden timetable-print-container">
       
-      {/* Timetable Header / Controls */}
-      <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <span>Weekly Class Schedule</span>
-            <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
-              ({startHour}:00 - {endHour}:00)
-            </span>
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Click any class for details, or click an empty slot to schedule a new class.
-          </p>
+      {/* Timetable Sub-header info */}
+      <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 no-print">
+        <div className="flex items-center space-x-2">
+          <span className="font-semibold text-slate-700 dark:text-slate-200">
+            {filteredClasses.length} Scheduled Sessions
+          </span>
+          <span>•</span>
+          <span>
+            {startHour}:00 - {endHour}:00 ({settings.timeFormat.toUpperCase()})
+          </span>
         </div>
 
-        {/* Legend */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
-            Lecture
+        <div className="flex items-center space-x-3 text-[11px]">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-brand-500"></span> Click any class to edit details or adjust timing
           </span>
-          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 inline-block"></span>
-            Lab
-          </span>
-          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-            Tutorial
-          </span>
-          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-lime-500 inline-block"></span>
-            Seminar
+          <span className="hidden sm:inline-flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600"></span> Click empty slot to schedule
           </span>
         </div>
       </div>
 
-      {/* Grid Container with horizontal scroll */}
+      {/* Grid Container */}
       <div className="overflow-x-auto relative">
         <div
-          className="min-w-[760px] grid"
+          className="min-w-[800px] grid select-none"
           style={{
-            gridTemplateColumns: `70px repeat(${days.length}, minmax(130px, 1fr))`,
+            gridTemplateColumns: `64px repeat(${days.length}, minmax(130px, 1fr))`,
           }}
         >
-          {/* Header Row: Corner + Day Headers */}
-          <div className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/90 backdrop-blur-sm border-b border-r border-slate-200 dark:border-slate-800 p-3 text-center text-xs font-bold text-slate-400">
-            TIME
+          {/* Header Corner */}
+          <div className="sticky top-0 z-20 bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-sm border-b border-r border-slate-200/80 dark:border-slate-800 p-2.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Time
           </div>
+
+          {/* Day Headers */}
           {days.map((day) => {
             const isToday = day === currentDayName;
             return (
               <div
                 key={day}
-                className={`sticky top-0 z-20 backdrop-blur-sm border-b border-r border-slate-200 dark:border-slate-800 py-3 px-2 text-center transition-colors ${
+                className={`sticky top-0 z-20 backdrop-blur-sm border-b border-r border-slate-200/80 dark:border-slate-800 py-3 px-2 text-center transition-colors ${
                   isToday
-                    ? 'bg-brand-50/90 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 font-bold'
-                    : 'bg-slate-50 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-semibold'
+                    ? 'bg-brand-50/80 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 font-bold'
+                    : 'bg-slate-50/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-semibold'
                 }`}
               >
-                <div className="text-xs uppercase tracking-wider">{day.slice(0, 3)}</div>
-                <div className="text-[11px] font-normal opacity-75">{day}</div>
+                <div className="text-xs uppercase tracking-wide">{day.slice(0, 3)}</div>
+                <div className="text-[11px] font-normal opacity-70">{day}</div>
                 {isToday && (
                   <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded-full text-[9px] bg-brand-500 text-white uppercase font-bold tracking-wider">
                     Today
@@ -125,13 +140,12 @@ export const WeeklyGrid = () => {
             );
           })}
 
-          {/* Time Rows and Day Grid Columns */}
-          {/* Left Column: Time labels */}
-          <div className="border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 select-none">
+          {/* Left Time Column */}
+          <div className="border-r border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
             {hourSlots.map((hour) => (
               <div
                 key={hour}
-                className="border-b border-slate-200/60 dark:border-slate-800/60 text-right pr-2 pt-1.5 text-[11px] font-semibold text-slate-400"
+                className="border-b border-slate-100 dark:border-slate-800/60 text-right pr-2 pt-1 text-[11px] font-medium text-slate-400"
                 style={{ height: `${ROW_HEIGHT_PX}px` }}
               >
                 {formatTimeDisplay(`${hour}:00`, settings.timeFormat === '24h')}
@@ -139,7 +153,7 @@ export const WeeklyGrid = () => {
             ))}
           </div>
 
-          {/* Columns for each day */}
+          {/* Day Columns */}
           {days.map((day) => {
             const dayClasses = filteredClasses.filter((c) => c.day === day);
             const isToday = day === currentDayName;
@@ -147,39 +161,39 @@ export const WeeklyGrid = () => {
             return (
               <div
                 key={day}
-                className={`relative border-r border-slate-200/60 dark:border-slate-800/60 transition-colors ${
-                  isToday ? 'bg-brand-50/20 dark:bg-brand-950/10' : ''
+                className={`relative border-r border-slate-200/70 dark:border-slate-800/70 ${
+                  isToday ? 'bg-brand-500/[0.02]' : ''
                 }`}
                 style={{ height: `${totalHours * ROW_HEIGHT_PX}px` }}
               >
-                {/* Background grid lines for hours (clickable to add class) */}
+                {/* Empty hour cells (clickable to schedule) */}
                 {hourSlots.map((hour) => (
                   <div
                     key={hour}
                     onClick={() => handleCellClick(day, hour)}
-                    className="border-b border-slate-200/50 dark:border-slate-800/50 hover:bg-brand-500/5 cursor-pointer transition-colors group relative"
+                    className="border-b border-slate-100 dark:border-slate-800/60 hover:bg-brand-500/[0.04] cursor-pointer transition-colors group relative"
                     style={{ height: `${ROW_HEIGHT_PX}px` }}
                     title={`Click to add class on ${day} at ${hour}:00`}
                   >
-                    <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-brand-500 text-xs font-medium transition-opacity">
-                      <Plus className="w-3.5 h-3.5 mr-1" /> Add
+                    <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-brand-600 dark:text-brand-400 text-xs font-semibold transition-opacity">
+                      <Plus className="w-3.5 h-3.5 mr-1" /> + Add
                     </span>
                   </div>
                 ))}
 
-                {/* Class Blocks overlay */}
+                {/* Scheduled Class Cards */}
                 {dayClasses.map((cls) => {
                   const startMinutes = timeToMinutes(cls.startTime);
                   const endMinutes = timeToMinutes(cls.endTime);
                   const startOffsetMin = startMinutes - startHour * 60;
-                  const durationMin = endMinutes - startMinutes;
+                  const durationMin = Math.max(15, endMinutes - startMinutes);
 
-                  // Top and height calculation based on pixels per minute
-                  const pixelsPerMinute = ROW_HEIGHT_PX / 60;
-                  const topPx = Math.max(0, startOffsetMin * pixelsPerMinute);
-                  const heightPx = Math.max(28, durationMin * pixelsPerMinute - 4); // 4px margin
+                  const pxPerMin = ROW_HEIGHT_PX / 60;
+                  const topPx = Math.max(0, startOffsetMin * pxPerMin);
+                  const heightPx = Math.max(34, durationMin * pxPerMin - 4);
 
                   const isConflicting = Boolean(conflictMap[cls.id]);
+                  const classColor = cls.color || '#6366f1';
 
                   return (
                     <div
@@ -188,61 +202,85 @@ export const WeeklyGrid = () => {
                       style={{
                         top: `${topPx}px`,
                         height: `${heightPx}px`,
-                        backgroundColor: `${cls.color || '#6366f1'}18`,
-                        borderLeftColor: cls.color || '#6366f1',
+                        backgroundColor: `${classColor}14`,
+                        borderLeftColor: classColor,
                       }}
-                      className={`absolute left-1 right-1 rounded-lg border-l-4 p-2 shadow-sm cursor-pointer transition-all hover:shadow-md hover:scale-[1.01] overflow-hidden flex flex-col justify-between z-10 select-none ${
+                      className={`group absolute left-1 right-1 rounded-xl border-l-[4px] p-2.5 shadow-sm hover:shadow-md cursor-pointer transition-all hover:scale-[1.01] overflow-hidden flex flex-col justify-between z-10 ${
                         isConflicting
-                          ? 'border-2 border-rose-500 ring-2 ring-rose-500/30'
-                          : 'border border-slate-200/80 dark:border-slate-700/80'
+                          ? 'border-2 border-rose-500 ring-2 ring-rose-500/20'
+                          : 'border border-slate-200/90 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
                       }`}
                     >
-                      {/* Top Header: Code & Type Pill */}
+                      {/* Top Header: Code & Type & Quick Actions on Hover */}
                       <div className="flex items-center justify-between gap-1 leading-tight">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span
                             className="font-bold text-xs truncate"
-                            style={{ color: cls.color || '#6366f1' }}
+                            style={{ color: classColor }}
                           >
                             {cls.code}
                           </span>
                           {isConflicting && (
                             <AlertTriangle
                               className="w-3.5 h-3.5 text-rose-500 shrink-0"
-                              title="Time conflict with another class!"
+                              title="Time overlap detected!"
                             />
                           )}
                         </div>
+
+                        {/* Hover Quick Tools: Duplicate & Delete */}
+                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity no-print">
+                          <button
+                            onClick={(e) => handleDuplicate(cls, e)}
+                            className="p-1 rounded bg-white dark:bg-slate-800 text-slate-500 hover:text-brand-600 shadow-sm"
+                            title="Duplicate class to next day"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => handleDelete(cls, e)}
+                            className="p-1 rounded bg-white dark:bg-slate-800 text-slate-500 hover:text-rose-600 shadow-sm"
+                            title="Delete class"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Type badge (visible when not hovered) */}
                         <span
-                          className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 text-white"
-                          style={{ backgroundColor: cls.color || '#6366f1' }}
+                          className="group-hover:hidden px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-white shrink-0"
+                          style={{ backgroundColor: classColor }}
                         >
                           {cls.type}
                         </span>
                       </div>
 
-                      {/* Title */}
-                      <div className="font-semibold text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 line-clamp-1 mt-0.5">
+                      {/* Course Title */}
+                      <div className="font-semibold text-xs text-slate-800 dark:text-slate-100 line-clamp-1 mt-0.5">
                         {cls.title}
                       </div>
 
-                      {/* Details: Room, Time, Instructor */}
-                      {heightPx > 45 && (
-                        <div className="flex flex-col gap-0.5 text-[10px] text-slate-600 dark:text-slate-300 mt-1">
-                          <div className="flex items-center gap-1 truncate font-medium">
+                      {/* Details: Time, Room, Instructor */}
+                      {heightPx > 48 && (
+                        <div className="flex flex-col gap-0.5 text-[11px] text-slate-600 dark:text-slate-300 mt-1">
+                          <div className="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-200 truncate">
                             <Clock className="w-3 h-3 text-slate-400 shrink-0" />
                             <span>
                               {formatTimeDisplay(cls.startTime, settings.timeFormat === '24h')} -{' '}
                               {formatTimeDisplay(cls.endTime, settings.timeFormat === '24h')}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1 truncate">
-                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                            <span className="truncate">{cls.room}</span>
-                          </div>
-                          {heightPx > 70 && (
-                            <div className="flex items-center gap-1 truncate">
-                              <User className="w-3 h-3 text-slate-400 shrink-0" />
+
+                          {cls.room && (
+                            <div className="flex items-center gap-1 truncate text-slate-500 dark:text-slate-400 text-[10px]">
+                              <MapPin className="w-3 h-3 shrink-0 text-slate-400" />
+                              <span className="truncate">{cls.room}</span>
+                            </div>
+                          )}
+
+                          {heightPx > 80 && cls.instructor && (
+                            <div className="flex items-center gap-1 truncate text-slate-500 dark:text-slate-400 text-[10px]">
+                              <User className="w-3 h-3 shrink-0 text-slate-400" />
                               <span className="truncate">{cls.instructor}</span>
                             </div>
                           )}

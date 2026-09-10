@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { PRESET_SCHEDULES, CAMPUS_ROOMS, DAYS_OF_WEEK } from '../data/mockData';
-import { detectAllConflicts, getLiveClassStatus, generateICS } from '../utils/timeHelpers';
+import { PRESET_SCHEDULES, DAYS_OF_WEEK } from '../data/mockData';
+import { detectAllConflicts, generateICS, timeToMinutes } from '../utils/timeHelpers';
 
 const ScheduleContext = createContext();
 
-const STORAGE_KEY_CLASSES = 'ttc_classes_v2';
-const STORAGE_KEY_PRESET = 'ttc_preset_id_v2';
-const STORAGE_KEY_EXAMS = 'ttc_exams_v2';
-const STORAGE_KEY_SETTINGS = 'ttc_settings_v2';
+const STORAGE_KEY_CLASSES = 'ttc_classes_v3';
+const STORAGE_KEY_PRESET = 'ttc_preset_id_v3';
+const STORAGE_KEY_SETTINGS = 'ttc_settings_v3';
 
 export const ScheduleProvider = ({ children }) => {
   // 1. Preset & Classes State
@@ -35,25 +34,20 @@ export const ScheduleProvider = ({ children }) => {
     return PRESET_SCHEDULES['cs']?.classes || [];
   });
 
-  const [exams, setExams] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_EXAMS);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.warn('Fallback to default preset exams', e);
-    }
-    return PRESET_SCHEDULES['cs']?.exams || [];
-  });
-
-  // 2. Settings State
+  // 2. Schedule Grid Settings
   const [settings, setSettings] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          darkMode: parsed.darkMode ?? false,
+          showWeekends: parsed.showWeekends ?? false,
+          timeFormat: parsed.timeFormat ?? '12h',
+          startHour: parsed.startHour ?? 8,
+          endHour: parsed.endHour ?? 18,
+          targetAttendance: parsed.targetAttendance ?? 75,
+        };
       }
     } catch (e) {
       console.warn('Fallback to default settings', e);
@@ -65,14 +59,13 @@ export const ScheduleProvider = ({ children }) => {
       startHour: 8,
       endHour: 18,
       targetAttendance: 75,
-      compactView: false,
     };
   });
 
   // Apply dark mode
   useEffect(() => {
     try {
-      if (settings?.darkMode) {
+      if (settings.darkMode) {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
@@ -83,7 +76,7 @@ export const ScheduleProvider = ({ children }) => {
     }
   }, [settings]);
 
-  // Persist classes and exams
+  // Persist classes
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(classes));
@@ -94,69 +87,24 @@ export const ScheduleProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(exams));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [exams]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem(STORAGE_KEY_PRESET, presetId);
     } catch (e) {
       console.error(e);
     }
   }, [presetId]);
 
-  // 3. Navigation View
-  const [currentView, setCurrentView] = useState('weekly');
-
-  // 4. Modals State
-  const [activeModal, setActiveModal] = useState(null);
+  // Modals state
+  const [activeModal, setActiveModal] = useState(null); // 'addClass' | 'editClass' | 'classDetail' | 'attendance' | 'export' | 'scheduleSettings'
   const [selectedClassForEdit, setSelectedClassForEdit] = useState(null);
 
-  // 5. Filters State
+  // Search & Filter State
   const [filters, setFilters] = useState({
     searchQuery: '',
     selectedDay: 'all',
     selectedType: 'all',
-    selectedInstructor: 'all',
-    selectedRoom: 'all',
   });
 
-  // 6. Live Clock & Simulated Time Travel
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [isSimulatedTime, setIsSimulatedTime] = useState(false);
-
-  useEffect(() => {
-    if (isSimulatedTime) return;
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [isSimulatedTime]);
-
-  const setSimulatedDayAndTime = (dayName, hour, minute) => {
-    const dayMap = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
-    const now = new Date();
-    const targetDayIndex = dayMap[dayName] ?? 1;
-    const currentDayIndex = now.getDay();
-    const dayDiff = targetDayIndex - currentDayIndex;
-
-    const simDate = new Date(now);
-    simDate.setDate(now.getDate() + dayDiff);
-    simDate.setHours(hour, minute, 0, 0);
-
-    setIsSimulatedTime(true);
-    setCurrentTime(simDate);
-  };
-
-  const resetToRealTime = () => {
-    setIsSimulatedTime(false);
-    setCurrentTime(new Date());
-  };
-
-  // 7. Computed Conflicts
+  // Computed Conflicts
   const conflictMap = useMemo(() => {
     return detectAllConflicts(classes || []);
   }, [classes]);
@@ -165,17 +113,11 @@ export const ScheduleProvider = ({ children }) => {
     return Object.keys(conflictMap || {}).length;
   }, [conflictMap]);
 
-  // 8. Live Class Status
-  const liveStatus = useMemo(() => {
-    return getLiveClassStatus(classes || [], currentTime);
-  }, [classes, currentTime]);
-
-  // 9. Filtered Classes
+  // Filtered Classes for Grid
   const filteredClasses = useMemo(() => {
     const safeClasses = Array.isArray(classes) ? classes : [];
     return safeClasses.filter((c) => {
       if (!c) return false;
-      // Search query
       if (filters.searchQuery) {
         const query = (filters.searchQuery || '').toLowerCase();
         const matchTitle = (c.title || '').toLowerCase().includes(query);
@@ -184,27 +126,17 @@ export const ScheduleProvider = ({ children }) => {
         const matchRoom = (c.room || '').toLowerCase().includes(query);
         if (!matchTitle && !matchCode && !matchInstructor && !matchRoom) return false;
       }
-      // Day filter
       if (filters.selectedDay !== 'all' && c.day !== filters.selectedDay) {
         return false;
       }
-      // Type filter
       if (filters.selectedType !== 'all' && c.type !== filters.selectedType) {
-        return false;
-      }
-      // Instructor filter
-      if (filters.selectedInstructor !== 'all' && c.instructor !== filters.selectedInstructor) {
-        return false;
-      }
-      // Room filter
-      if (filters.selectedRoom !== 'all' && c.room !== filters.selectedRoom) {
         return false;
       }
       return true;
     });
   }, [classes, filters]);
 
-  // Class Management Actions
+  // Class Actions
   const addClass = (newClass) => {
     const classWithId = {
       ...newClass,
@@ -230,6 +162,52 @@ export const ScheduleProvider = ({ children }) => {
     }
   };
 
+  // Duplicate a class to another day
+  const duplicateClass = (classId, targetDay) => {
+    const existing = classes.find((c) => c.id === classId);
+    if (!existing) return;
+    const duplicated = {
+      ...existing,
+      id: 'class-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+      day: targetDay,
+      attended: 0,
+      totalHeld: 0,
+    };
+    setClasses((prev) => [...(prev || []), duplicated]);
+    return duplicated;
+  };
+
+  // Adjust time (+/- minutes)
+  const adjustClassTime = (classId, deltaMinutes) => {
+    setClasses((prev) =>
+      (prev || []).map((c) => {
+        if (c.id !== classId) return c;
+        const startM = Math.max(0, timeToMinutes(c.startTime) + deltaMinutes);
+        const endM = Math.max(startM + 15, timeToMinutes(c.endTime) + deltaMinutes);
+
+        const formatMin = (m) => {
+          const hh = String(Math.floor(m / 60) % 24).padStart(2, '0');
+          const mm = String(m % 60).padStart(2, '0');
+          return `${hh}:${mm}`;
+        };
+
+        return {
+          ...c,
+          startTime: formatMin(startM),
+          endTime: formatMin(endM),
+        };
+      })
+    );
+  };
+
+  const updateTimetableHours = (startHour, endHour) => {
+    setSettings((prev) => ({
+      ...prev,
+      startHour: Math.max(0, Math.min(startHour, 23)),
+      endHour: Math.max(startHour + 1, Math.min(endHour, 24)),
+    }));
+  };
+
   const markAttendance = (classId, status) => {
     setClasses((prev) =>
       (prev || []).map((c) => {
@@ -237,16 +215,9 @@ export const ScheduleProvider = ({ children }) => {
         const currentAttended = c.attended || 0;
         const currentTotal = c.totalHeld || 0;
         if (status === 'attended') {
-          return {
-            ...c,
-            attended: currentAttended + 1,
-            totalHeld: currentTotal + 1,
-          };
+          return { ...c, attended: currentAttended + 1, totalHeld: currentTotal + 1 };
         } else if (status === 'missed') {
-          return {
-            ...c,
-            totalHeld: currentTotal + 1,
-          };
+          return { ...c, totalHeld: currentTotal + 1 };
         } else if (status === 'undo') {
           return {
             ...c,
@@ -263,22 +234,6 @@ export const ScheduleProvider = ({ children }) => {
     if (PRESET_SCHEDULES[id]) {
       setPresetId(id);
       setClasses(PRESET_SCHEDULES[id].classes);
-      setExams(PRESET_SCHEDULES[id].exams);
-    }
-  };
-
-  const importScheduleJSON = (jsonString) => {
-    try {
-      const data = JSON.parse(jsonString);
-      if (Array.isArray(data.classes)) {
-        setClasses(data.classes);
-        if (Array.isArray(data.exams)) setExams(data.exams);
-        if (data.presetTitle) setPresetId('custom');
-        return { success: true };
-      }
-      throw new Error('Invalid JSON structure: missing "classes" array');
-    } catch (err) {
-      return { success: false, error: err.message };
     }
   };
 
@@ -289,7 +244,7 @@ export const ScheduleProvider = ({ children }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `timetable-${presetId}-${new Date().toISOString().split('T')[0]}.ics`;
+    a.download = `timetable-${presetId}.ics`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -297,9 +252,9 @@ export const ScheduleProvider = ({ children }) => {
   };
 
   const activePresetInfo = PRESET_SCHEDULES[presetId] || {
-    title: 'Custom Schedule',
-    semester: 'Active Semester',
-    section: 'Personalized',
+    title: 'Academic Timetable',
+    semester: 'Semester',
+    section: 'Section A',
   };
 
   return (
@@ -309,21 +264,13 @@ export const ScheduleProvider = ({ children }) => {
         activePresetInfo,
         classes: classes || [],
         filteredClasses: filteredClasses || [],
-        exams: exams || [],
-        setExams,
         conflictMap: conflictMap || {},
         conflictCount,
-        liveStatus,
-        currentTime,
-        isSimulatedTime,
-        setSimulatedDayAndTime,
-        resetToRealTime,
         filters,
         setFilters,
         settings,
         setSettings,
-        currentView,
-        setCurrentView,
+        updateTimetableHours,
         activeModal,
         setActiveModal,
         selectedClassForEdit,
@@ -331,11 +278,11 @@ export const ScheduleProvider = ({ children }) => {
         addClass,
         updateClass,
         deleteClass,
+        duplicateClass,
+        adjustClassTime,
         markAttendance,
         switchPreset,
-        importScheduleJSON,
         downloadICSFile,
-        campusRooms: CAMPUS_ROOMS || [],
       }}
     >
       {children}
