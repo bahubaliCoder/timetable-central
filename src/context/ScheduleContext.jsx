@@ -4,50 +4,59 @@ import { detectAllConflicts, getLiveClassStatus, generateICS } from '../utils/ti
 
 const ScheduleContext = createContext();
 
-const STORAGE_KEY_CLASSES = 'ttc_classes_v1';
-const STORAGE_KEY_PRESET = 'ttc_preset_id_v1';
-const STORAGE_KEY_EXAMS = 'ttc_exams_v1';
-const STORAGE_KEY_SETTINGS = 'ttc_settings_v1';
+const STORAGE_KEY_CLASSES = 'ttc_classes_v2';
+const STORAGE_KEY_PRESET = 'ttc_preset_id_v2';
+const STORAGE_KEY_EXAMS = 'ttc_exams_v2';
+const STORAGE_KEY_SETTINGS = 'ttc_settings_v2';
 
 export const ScheduleProvider = ({ children }) => {
   // 1. Preset & Classes State
   const [presetId, setPresetId] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY_PRESET) || 'cs';
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_PRESET);
+      return (saved && PRESET_SCHEDULES[saved]) ? saved : 'cs';
+    } catch {
+      return 'cs';
+    }
   });
 
   const [classes, setClasses] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_CLASSES);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved classes', e);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_CLASSES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
+    } catch (e) {
+      console.warn('Fallback to default preset classes', e);
     }
-    return PRESET_SCHEDULES['cs'].classes;
+    return PRESET_SCHEDULES['cs']?.classes || [];
   });
 
   const [exams, setExams] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_EXAMS);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved exams', e);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_EXAMS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
       }
+    } catch (e) {
+      console.warn('Fallback to default preset exams', e);
     }
-    return PRESET_SCHEDULES['cs'].exams;
+    return PRESET_SCHEDULES['cs']?.exams || [];
   });
 
   // 2. Settings State
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
+      if (saved) {
         return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse settings', e);
       }
+    } catch (e) {
+      console.warn('Fallback to default settings', e);
     }
     return {
       darkMode: false,
@@ -60,34 +69,50 @@ export const ScheduleProvider = ({ children }) => {
     };
   });
 
-  // Apply dark mode to document HTML element
+  // Apply dark mode
   useEffect(() => {
-    if (settings.darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    try {
+      if (settings?.darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    } catch (e) {
+      console.error(e);
     }
-    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
   }, [settings]);
 
   // Persist classes and exams
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(classes));
+    try {
+      localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(classes));
+    } catch (e) {
+      console.error(e);
+    }
   }, [classes]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(exams));
+    try {
+      localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(exams));
+    } catch (e) {
+      console.error(e);
+    }
   }, [exams]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PRESET, presetId);
+    try {
+      localStorage.setItem(STORAGE_KEY_PRESET, presetId);
+    } catch (e) {
+      console.error(e);
+    }
   }, [presetId]);
 
   // 3. Navigation View
-  const [currentView, setCurrentView] = useState('weekly'); // 'weekly' | 'daily' | 'exams' | 'rooms'
+  const [currentView, setCurrentView] = useState('weekly');
 
   // 4. Modals State
-  const [activeModal, setActiveModal] = useState(null); // 'addClass' | 'editClass' | 'attendance' | 'export' | 'classDetail'
+  const [activeModal, setActiveModal] = useState(null);
   const [selectedClassForEdit, setSelectedClassForEdit] = useState(null);
 
   // 5. Filters State
@@ -102,9 +127,7 @@ export const ScheduleProvider = ({ children }) => {
   // 6. Live Clock & Simulated Time Travel
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isSimulatedTime, setIsSimulatedTime] = useState(false);
-  const [simulatedOffsetMinutes, setSimulatedOffsetMinutes] = useState(0);
 
-  // Auto-tick every 30 seconds for live status
   useEffect(() => {
     if (isSimulatedTime) return;
     const interval = setInterval(() => {
@@ -113,7 +136,6 @@ export const ScheduleProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [isSimulatedTime]);
 
-  // Time travel helper
   const setSimulatedDayAndTime = (dayName, hour, minute) => {
     const dayMap = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
     const now = new Date();
@@ -136,28 +158,30 @@ export const ScheduleProvider = ({ children }) => {
 
   // 7. Computed Conflicts
   const conflictMap = useMemo(() => {
-    return detectAllConflicts(classes);
+    return detectAllConflicts(classes || []);
   }, [classes]);
 
   const conflictCount = useMemo(() => {
-    return Object.keys(conflictMap).length;
+    return Object.keys(conflictMap || {}).length;
   }, [conflictMap]);
 
   // 8. Live Class Status
   const liveStatus = useMemo(() => {
-    return getLiveClassStatus(classes, currentTime);
+    return getLiveClassStatus(classes || [], currentTime);
   }, [classes, currentTime]);
 
   // 9. Filtered Classes
   const filteredClasses = useMemo(() => {
-    return classes.filter((c) => {
+    const safeClasses = Array.isArray(classes) ? classes : [];
+    return safeClasses.filter((c) => {
+      if (!c) return false;
       // Search query
       if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        const matchTitle = c.title.toLowerCase().includes(query);
-        const matchCode = c.code.toLowerCase().includes(query);
-        const matchInstructor = c.instructor.toLowerCase().includes(query);
-        const matchRoom = c.room.toLowerCase().includes(query);
+        const query = (filters.searchQuery || '').toLowerCase();
+        const matchTitle = (c.title || '').toLowerCase().includes(query);
+        const matchCode = (c.code || '').toLowerCase().includes(query);
+        const matchInstructor = (c.instructor || '').toLowerCase().includes(query);
+        const matchRoom = (c.room || '').toLowerCase().includes(query);
         if (!matchTitle && !matchCode && !matchInstructor && !matchRoom) return false;
       }
       // Day filter
@@ -188,18 +212,18 @@ export const ScheduleProvider = ({ children }) => {
       attended: newClass.attended ?? 0,
       totalHeld: newClass.totalHeld ?? 0,
     };
-    setClasses((prev) => [...prev, classWithId]);
+    setClasses((prev) => [...(prev || []), classWithId]);
     return classWithId;
   };
 
   const updateClass = (id, updatedFields) => {
     setClasses((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updatedFields } : c))
+      (prev || []).map((c) => (c.id === id ? { ...c, ...updatedFields } : c))
     );
   };
 
   const deleteClass = (id) => {
-    setClasses((prev) => prev.filter((c) => c.id !== id));
+    setClasses((prev) => (prev || []).filter((c) => c.id !== id));
     if (selectedClassForEdit?.id === id) {
       setSelectedClassForEdit(null);
       setActiveModal(null);
@@ -208,7 +232,7 @@ export const ScheduleProvider = ({ children }) => {
 
   const markAttendance = (classId, status) => {
     setClasses((prev) =>
-      prev.map((c) => {
+      (prev || []).map((c) => {
         if (c.id !== classId) return c;
         const currentAttended = c.attended || 0;
         const currentTotal = c.totalHeld || 0;
@@ -283,11 +307,11 @@ export const ScheduleProvider = ({ children }) => {
       value={{
         presetId,
         activePresetInfo,
-        classes,
-        filteredClasses,
-        exams,
+        classes: classes || [],
+        filteredClasses: filteredClasses || [],
+        exams: exams || [],
         setExams,
-        conflictMap,
+        conflictMap: conflictMap || {},
         conflictCount,
         liveStatus,
         currentTime,
@@ -311,7 +335,7 @@ export const ScheduleProvider = ({ children }) => {
         switchPreset,
         importScheduleJSON,
         downloadICSFile,
-        campusRooms: CAMPUS_ROOMS,
+        campusRooms: CAMPUS_ROOMS || [],
       }}
     >
       {children}

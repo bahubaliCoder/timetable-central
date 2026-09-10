@@ -26,15 +26,17 @@ export const FreeRoomFinder = () => {
   const targetMinutes = timeToMinutes(selectedTime);
 
   // Find unique buildings
-  const buildings = Array.from(new Set(campusRooms.map((r) => r.building))).sort();
+  const buildings = Array.from(new Set((campusRooms || []).map((r) => r.building))).filter(Boolean).sort();
 
   // Evaluate status of each room at selectedDay & selectedTime
-  const roomsWithStatus = campusRooms.map((room) => {
+  const roomsWithStatus = (campusRooms || []).map((room) => {
     // Find if any class occupies this room on selectedDay around selectedTime
-    const occupyingClass = classes.find((c) => {
-      if (c.day !== selectedDay) return false;
-      // Match room name loosely or strictly
-      if (!c.room.toLowerCase().includes(room.name.toLowerCase()) && !room.name.toLowerCase().includes(c.room.toLowerCase())) {
+    const occupyingClass = (classes || []).find((c) => {
+      if (!c || c.day !== selectedDay) return false;
+      const cRoom = (c.room || '').toLowerCase();
+      const rName = (room.name || '').toLowerCase();
+      if (!cRoom || !rName) return false;
+      if (!cRoom.includes(rName) && !rName.includes(cRoom)) {
         return false;
       }
       const startM = timeToMinutes(c.startTime);

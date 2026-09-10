@@ -7,8 +7,8 @@ export const FilterBar = () => {
   const { classes, filteredClasses, filters, setFilters, settings } = useSchedule();
 
   // Extract unique instructors and rooms from current classes
-  const uniqueInstructors = Array.from(new Set(classes.map((c) => c.instructor))).filter(Boolean).sort();
-  const uniqueRooms = Array.from(new Set(classes.map((c) => c.room))).filter(Boolean).sort();
+  const uniqueInstructors = Array.from(new Set((classes || []).map((c) => c?.instructor))).filter(Boolean).sort();
+  const uniqueRooms = Array.from(new Set((classes || []).map((c) => c?.room))).filter(Boolean).sort();
 
   const daysToDisplay = settings.showWeekends ? DAYS_OF_WEEK : DAYS_OF_WEEK.slice(0, 5);
 
