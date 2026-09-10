@@ -8,6 +8,10 @@ import {
   MapPin,
   Tag,
   Trash2,
+  GraduationCap,
+  Mail,
+  Building,
+  CheckCircle,
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { checkSlotConflict } from '../utils/conflictChecker';
@@ -23,6 +27,8 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
     saveSlot,
     deleteSlot,
     addNotification,
+    isStudent,
+    isFaculty,
   } = useAdmin();
 
   const [formData, setFormData] = useState({
@@ -50,7 +56,7 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
       setFormData({
         id: '',
         day: days[0] || 'Monday',
-        periodId: periods[0]?.id || 'p-1',
+        periodId: periods.find((p) => !p.isBreak)?.id || 'p-1',
         subjectId: subjects[0]?.id || '',
         teacherId: teachers[0]?.id || '',
         roomId: rooms[0]?.id || '',
@@ -61,8 +67,10 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
 
   if (!isOpen) return null;
 
-  // Real-time conflict preview
-  const conflictWarnings = checkSlotConflict(formData, classId, timetables, teachers, rooms);
+  // Real-time conflict preview for faculty
+  const conflictWarnings = isFaculty
+    ? checkSlotConflict(formData, classId, timetables, teachers, rooms)
+    : [];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -83,11 +91,123 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
   };
 
   const activePeriods = periods.filter((p) => !p.isBreak);
+  const currentPeriod = periods.find((p) => p.id === formData.periodId);
+  const currentSubject = subjects.find((s) => s.id === formData.subjectId);
+  const currentTeacher = teachers.find((t) => t.id === formData.teacherId);
+  const currentRoom = rooms.find((r) => r.id === formData.roomId);
 
+  // Student Read-Only View
+  if (isStudent) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8">
+          {/* Header */}
+          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
+            <div className="flex items-center space-x-3">
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-md"
+                style={{ backgroundColor: currentSubject?.color || '#3b82f6' }}
+              >
+                {currentSubject?.code?.substring(0, 3) || 'CLS'}
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  {currentSubject?.name || 'Class Session'}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {formData.day} • {currentPeriod ? `${currentPeriod.startTime} - ${currentPeriod.endTime}` : 'Scheduled Slot'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {/* Subject Summary */}
+            <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                  Course & Subject Code
+                </span>
+                <div className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {currentSubject?.code}: {currentSubject?.name}
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-600 text-white shadow-sm">
+                {formData.type}
+              </span>
+            </div>
+
+            {/* Professor / Faculty Card */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                Assigned Faculty
+              </span>
+              <div className="flex items-center space-x-3">
+                <img
+                  src={currentTeacher?.avatar}
+                  alt={currentTeacher?.name}
+                  className="w-12 h-12 rounded-2xl object-cover ring-2 ring-purple-500/20"
+                />
+                <div className="overflow-hidden">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                    {currentTeacher?.name || 'Faculty Member'}
+                  </h4>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                    {currentTeacher?.designation} • {currentTeacher?.department}
+                  </p>
+                  <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                    <Mail className="w-3 h-3" /> {currentTeacher?.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Room Location Card */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white">
+                    {currentRoom?.name || 'Campus Room'}
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    {currentRoom?.building} • Floor {currentRoom?.floor || '1'} (Cap: {currentRoom?.capacity || 40})
+                  </div>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                {currentRoom?.type || 'Room'}
+              </span>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Faculty Interactive Modal
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8">
-        
         {/* Header */}
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div>
@@ -124,7 +244,6 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[72vh] overflow-y-auto">
-          
           {/* Day & Period */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -146,7 +265,7 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                Class Period / Time
+                Class Period & Time
               </label>
               <select
                 value={formData.periodId}
@@ -162,41 +281,41 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
             </div>
           </div>
 
-          {/* Subject Selection */}
+          {/* Subject */}
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              Subject *
+              Academic Subject *
             </label>
             <select
-              required
               value={formData.subjectId}
               onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
+              required
               className="w-full text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">-- Choose Subject --</option>
-              {subjects.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.code}: {sub.name} ({sub.department})
+              <option value="">Select Subject...</option>
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.code} • {s.name} ({s.credits} Credits, {s.type})
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Teacher Selection */}
+          {/* Teacher */}
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              Faculty / Instructor *
+              Instructor / Faculty *
             </label>
             <select
-              required
               value={formData.teacherId}
               onChange={(e) => setFormData({ ...formData, teacherId: e.target.value })}
+              required
               className="w-full text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">-- Assign Teacher --</option>
+              <option value="">Select Faculty...</option>
               {teachers.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} • {t.designation} ({t.department})
+                  {t.name} ({t.department} - {t.designation})
                 </option>
               ))}
             </select>
@@ -209,15 +328,15 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
                 Room / Laboratory *
               </label>
               <select
-                required
                 value={formData.roomId}
                 onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
+                required
                 className="w-full text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">-- Select Room --</option>
+                <option value="">Select Room...</option>
                 {rooms.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.name} ({r.type}, Cap: {r.capacity})
+                    {r.name} ({r.building}, Cap: {r.capacity})
                   </option>
                 ))}
               </select>
@@ -233,9 +352,10 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
                 className="w-full text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="Lecture">Lecture</option>
-                <option value="Lab">Practical Lab</option>
-                <option value="Tutorial">Tutorial</option>
+                <option value="Laboratory">Laboratory</option>
                 <option value="Seminar">Seminar</option>
+                <option value="Tutorial">Tutorial</option>
+                <option value="Project">Project</option>
               </select>
             </div>
           </div>
@@ -271,9 +391,7 @@ export const ClassScheduleModal = ({ isOpen, onClose, slotData, classId }) => {
               </button>
             </div>
           </div>
-
         </form>
-
       </div>
     </div>
   );

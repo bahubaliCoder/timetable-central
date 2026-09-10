@@ -31,20 +31,32 @@ export const Sidebar = () => {
     rooms,
     classes,
     currentUser,
+    isStudent,
+    isFaculty,
   } = useAdmin();
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'timetable', label: 'Timetable Manager', icon: Calendar, badge: 'Live' },
-    { id: 'teachers', label: 'Faculty Directory', icon: Users, count: teachers.length },
-    { id: 'subjects', label: 'Subject Catalog', icon: BookOpen, count: subjects.length },
-    { id: 'classes', label: 'Classes & Sections', icon: School, count: classes.length },
-    { id: 'rooms', label: 'Rooms & Labs', icon: DoorOpen, count: rooms.length },
-    { id: 'reports', label: 'Reports & Audits', icon: BarChart3 },
-    { id: 'roles', label: 'Roles & Access', icon: ShieldCheck },
-    { id: 'settings', label: 'Academic Settings', icon: Settings },
-    { id: 'profile', label: 'My Account', icon: UserCheck },
-  ];
+  const navItems = isStudent
+    ? [
+        { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
+        { id: 'timetable', label: 'Class Timetable', icon: Calendar, badge: 'Student' },
+        { id: 'teachers', label: 'Faculty Directory', icon: Users, count: teachers.length },
+        { id: 'subjects', label: 'Course Catalog', icon: BookOpen, count: subjects.length },
+        { id: 'rooms', label: 'Campus Rooms', icon: DoorOpen, count: rooms.length },
+        { id: 'roles', label: 'Roles & Access', icon: ShieldCheck },
+        { id: 'profile', label: 'Student Profile', icon: UserCheck },
+      ]
+    : [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'timetable', label: 'Timetable Manager', icon: Calendar, badge: 'Live' },
+        { id: 'teachers', label: 'Faculty Directory', icon: Users, count: teachers.length },
+        { id: 'subjects', label: 'Subject Catalog', icon: BookOpen, count: subjects.length },
+        { id: 'classes', label: 'Classes & Sections', icon: School, count: classes.length },
+        { id: 'rooms', label: 'Rooms & Labs', icon: DoorOpen, count: rooms.length },
+        { id: 'reports', label: 'Reports & Audits', icon: BarChart3 },
+        { id: 'roles', label: 'Roles & Access', icon: ShieldCheck },
+        { id: 'settings', label: 'Academic Settings', icon: Settings },
+        { id: 'profile', label: 'Faculty Profile', icon: UserCheck },
+      ];
 
   const handleNavClick = (pageId) => {
     setActivePage(pageId);
@@ -82,7 +94,7 @@ export const Sidebar = () => {
                   <span className="text-blue-600 dark:text-blue-400">Central</span>
                 </div>
                 <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider truncate">
-                  Academic Planner
+                  {isStudent ? 'Student Portal' : 'Academic Planner'}
                 </div>
               </div>
             )}
@@ -108,17 +120,23 @@ export const Sidebar = () => {
 
         {/* User Role Pill */}
         {!sidebarCollapsed && (
-          <div className="mx-4 mt-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center space-x-2.5">
+          <div className="mx-4 mt-3 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center space-x-2.5">
             <img
               src={currentUser.avatar}
               alt={currentUser.name}
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500/20"
+              className="w-9 h-9 rounded-xl object-cover ring-2 ring-slate-200 dark:ring-slate-700"
             />
             <div className="overflow-hidden leading-tight flex-1">
               <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                 {currentUser.name}
               </div>
-              <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+              <span
+                className={`inline-block mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                  isStudent
+                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300'
+                }`}
+              >
                 {currentUser.role}
               </span>
             </div>

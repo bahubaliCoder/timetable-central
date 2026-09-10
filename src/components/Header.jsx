@@ -13,6 +13,7 @@ import {
   User,
   Settings,
   Calendar,
+  GraduationCap,
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 
@@ -130,34 +131,53 @@ export const Header = ({ onOpenLoginModal }) => {
         <div className="relative" ref={roleRef}>
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 border border-blue-200/80 dark:border-blue-800 text-xs font-bold text-blue-700 dark:text-blue-300 transition-colors"
-            title="Switch User Role to test permissions"
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-colors ${
+              currentUser.role === 'Student'
+                ? 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 border-emerald-200/80 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                : 'bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 border-purple-200/80 dark:border-purple-800 text-purple-700 dark:text-purple-300'
+            }`}
+            title="Switch User Role between Faculty and Student"
           >
-            <Shield className="w-3.5 h-3.5" />
-            <span>{currentUser.role}</span>
+            {currentUser.role === 'Student' ? (
+              <GraduationCap className="w-3.5 h-3.5 text-emerald-600" />
+            ) : (
+              <Shield className="w-3.5 h-3.5 text-purple-600" />
+            )}
+            <span>{currentUser.role} View</span>
             <ChevronDown className="w-3 h-3 opacity-60" />
           </button>
 
           {showRoleMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-40 text-xs">
+            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-40 text-xs">
               <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                Simulate User Role
+                Select Active Role
               </div>
-              {['Super Admin', 'Admin', 'Faculty'].map((role) => (
+              {[
+                { role: 'Faculty', desc: 'Manage schedules, classes & rooms', icon: Shield, color: 'text-purple-600' },
+                { role: 'Student', desc: 'Browse schedules, find rooms & export', icon: GraduationCap, color: 'text-emerald-600' },
+              ].map((item) => (
                 <button
-                  key={role}
+                  key={item.role}
                   onClick={() => {
-                    switchRole(role);
+                    switchRole(item.role);
                     setShowRoleMenu(false);
                   }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg font-semibold flex items-center justify-between transition-colors ${
-                    currentUser.role === role
+                  className={`w-full text-left p-2 rounded-xl font-semibold flex items-center justify-between transition-colors ${
+                    currentUser.role === item.role
                       ? 'bg-blue-600 text-white'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <span>{role}</span>
-                  {currentUser.role === role && <CheckCircle className="w-3.5 h-3.5" />}
+                  <div className="flex items-center space-x-2">
+                    <item.icon className={`w-4 h-4 ${currentUser.role === item.role ? 'text-white' : item.color}`} />
+                    <div>
+                      <div className="leading-none">{item.role}</div>
+                      <div className={`text-[10px] mt-0.5 ${currentUser.role === item.role ? 'text-blue-100' : 'text-slate-400'}`}>
+                        {item.desc}
+                      </div>
+                    </div>
+                  </div>
+                  {currentUser.role === item.role && <CheckCircle className="w-4 h-4" />}
                 </button>
               ))}
             </div>

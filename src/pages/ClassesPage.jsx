@@ -3,7 +3,7 @@ import { School, Plus, Search, Edit2, Trash2, X, Calendar, Users } from 'lucide-
 import { useAdmin } from '../context/AdminContext';
 
 export const ClassesPage = () => {
-  const { classes, addClass, updateClass, deleteClass, setActiveClassId, setActivePage, teachers } = useAdmin();
+  const { classes, addClass, updateClass, deleteClass, setActiveClassId, setActivePage, teachers, isFaculty, isStudent } = useAdmin();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
@@ -58,23 +58,25 @@ export const ClassesPage = () => {
     }
   };
 
-  const handleViewSchedule = (classId) => {
-    setActiveClassId(classId);
+  const handleViewTimetable = (clsId) => {
+    setActiveClassId(clsId);
     setActivePage('timetable');
   };
 
-  const filteredClasses = classes.filter((c) => {
-    if (search) {
-      const q = search.toLowerCase();
-      return c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.department.toLowerCase().includes(q);
-    }
-    return true;
+  const filteredClasses = classes.filter((cls) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      cls.name.toLowerCase().includes(q) ||
+      cls.code.toLowerCase().includes(q) ||
+      cls.department.toLowerCase().includes(q)
+    );
   });
 
   return (
     <div className="space-y-6">
       
-      {/* Header */}
+      {/* Header Bar */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -82,17 +84,21 @@ export const ClassesPage = () => {
             <span>Academic Classes & Cohorts ({classes.length})</span>
           </h2>
           <p className="text-xs text-slate-400">
-            Configure programs, student cohorts, sections, and assigned faculty mentors.
+            {isFaculty
+              ? 'Configure programs, student cohorts, sections, and assigned faculty mentors.'
+              : 'Browse degree programs, student sections, and class timetables.'}
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-500/20 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Class</span>
-        </button>
+        {isFaculty && (
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-500/20 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Class</span>
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -115,58 +121,60 @@ export const ClassesPage = () => {
             className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-blue-300 dark:hover:border-blue-800 transition-all flex flex-col justify-between"
           >
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-extrabold text-xs">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span className="px-2.5 py-0.5 rounded-lg text-xs font-black bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                   {cls.code}
                 </span>
-
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {cls.studentCount} Students
+                <span className="text-[10px] font-semibold text-slate-400">
+                  {cls.academicYear}
                 </span>
               </div>
 
-              <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-100 mb-1">
+              <h3 className="font-extrabold text-base text-slate-800 dark:text-slate-100 mb-1">
                 {cls.name}
-              </h4>
-              <p className="text-xs text-slate-400 mb-3">
-                {cls.semester} • {cls.section} ({cls.department})
-              </p>
+              </h3>
+              <div className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                {cls.department} • {cls.semester} ({cls.section})
+              </div>
 
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 mb-4 space-y-1">
-                <div>
-                  Mentor: <strong>{cls.mentor}</strong>
+              <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                <div className="flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Enrolled: <strong>{cls.studentCount} Students</strong></span>
                 </div>
                 <div>
-                  Academic Year: <strong>{cls.academicYear}</strong>
+                  Mentor: <span className="font-semibold text-slate-800 dark:text-slate-200">{cls.mentor}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <button
-                onClick={() => handleViewSchedule(cls.id)}
-                className="flex items-center space-x-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                onClick={() => handleViewTimetable(cls.id)}
+                className="flex items-center space-x-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
               >
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Manage Timetable</span>
+                <span>{isFaculty ? 'Manage Timetable' : 'View Timetable'}</span>
               </button>
 
-              <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => handleOpenEdit(cls)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
-                  title="Edit Class"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(cls.id)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                  title="Delete Class"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              {isFaculty && (
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => handleOpenEdit(cls)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                    title="Edit Class"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(cls.id)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    title="Delete Class"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}

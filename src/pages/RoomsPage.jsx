@@ -3,7 +3,7 @@ import { DoorOpen, Plus, Search, Edit2, Trash2, X, Users, CheckCircle2 } from 'l
 import { useAdmin } from '../context/AdminContext';
 
 export const RoomsPage = () => {
-  const { rooms, addRoom, updateRoom, deleteRoom, timetables } = useAdmin();
+  const { rooms, addRoom, updateRoom, deleteRoom, timetables, isFaculty, isStudent } = useAdmin();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -102,13 +102,15 @@ export const RoomsPage = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-500/20 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Room / Lab</span>
-        </button>
+        {isFaculty && (
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-500/20 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Room / Lab</span>
+          </button>
+        )}
       </div>
 
       {/* Filter toolbar */}
@@ -186,22 +188,24 @@ export const RoomsPage = () => {
                   {bookedPeriods} Weekly Bookings
                 </span>
 
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => handleOpenEdit(r)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
-                    title="Edit Room"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                    title="Delete Room"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                {isFaculty && (
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleOpenEdit(r)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                      title="Edit Room"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                      title="Delete Room"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );

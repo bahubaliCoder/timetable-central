@@ -3,7 +3,7 @@ import { BookOpen, Plus, Search, Edit2, Trash2, X, Tag } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 
 export const SubjectsPage = () => {
-  const { subjects, addSubject, updateSubject, deleteSubject } = useAdmin();
+  const { subjects, addSubject, updateSubject, deleteSubject, isFaculty, isStudent } = useAdmin();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -83,13 +83,15 @@ export const SubjectsPage = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-cyan-500/20 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Subject</span>
-        </button>
+        {isFaculty && (
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-cyan-500/20 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Subject</span>
+          </button>
+        )}
       </div>
 
       {/* Filter toolbar */}
@@ -157,22 +159,24 @@ export const SubjectsPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-end space-x-1 pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => handleOpenEdit(s)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 transition-colors"
-                title="Edit Subject"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(s.id)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                title="Delete Subject"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+            {isFaculty && (
+              <div className="flex items-center justify-end space-x-1 pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => handleOpenEdit(s)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 transition-colors"
+                  title="Edit Subject"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(s.id)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                  title="Delete Subject"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

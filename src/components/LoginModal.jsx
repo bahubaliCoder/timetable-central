@@ -50,37 +50,48 @@ export const LoginModal = ({ isOpen, onClose }) => {
 
           {INITIAL_USERS.map((u) => {
             const isSelected = currentUser.id === u.id;
+            const isStudent = u.role === 'Student';
             return (
               <div
                 key={u.id}
                 onClick={() => handleSelectUser(u)}
-                className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+                className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
                   isSelected
-                    ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/40 ring-2 ring-blue-500/20'
+                    ? isStudent
+                      ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40 ring-2 ring-emerald-500/20'
+                      : 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/40 ring-2 ring-purple-500/20'
                     : 'border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40'
                 }`}
               >
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={u.avatar}
-                    alt={u.name}
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700"
-                  />
+                <div className="flex items-center space-x-3.5">
+                  <div className="relative">
+                    <img
+                      src={u.avatar}
+                      alt={u.name}
+                      className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-200 dark:ring-slate-700 shadow-sm"
+                    />
+                    <div
+                      className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] shadow-sm ${
+                        isStudent ? 'bg-emerald-600' : 'bg-purple-600'
+                      }`}
+                    >
+                      {isStudent ? <GraduationCap className="w-3 h-3" /> : <ShieldCheck className="w-3 h-3" />}
+                    </div>
+                  </div>
                   <div>
-                    <h4 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                       {u.name}
                     </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{u.department}</p>
                     <p className="text-[11px] text-slate-400">{u.email}</p>
                   </div>
                 </div>
 
                 <span
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
-                    u.role === 'Super Admin'
-                      ? 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
-                      : u.role === 'Admin'
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                      : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                  className={`px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider ${
+                    isStudent
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                      : 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
                   }`}
                 >
                   {u.role}

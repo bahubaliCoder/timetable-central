@@ -44,11 +44,29 @@ export const AdminProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_PREFIX + 'user');
-      return saved ? JSON.parse(saved) : INITIAL_USERS[0];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.role === 'Super Admin' || parsed.role === 'Admin') {
+          return INITIAL_USERS[0];
+        }
+        return parsed;
+      }
+      return INITIAL_USERS[0];
     } catch {
       return INITIAL_USERS[0];
     }
   });
+
+  const isFaculty = currentUser.role === 'Faculty';
+  const isStudent = currentUser.role === 'Student';
+
+  const updateUserProfile = (updatedFields) => {
+    setCurrentUser((prev) => {
+      const updated = { ...prev, ...updatedFields };
+      localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const switchRole = (newRole) => {
     const userTemplate = INITIAL_USERS.find((u) => u.role === newRole) || {
@@ -438,6 +456,9 @@ export const AdminProvider = ({ children }) => {
         setDarkMode,
         currentUser,
         setCurrentUser,
+        updateUserProfile,
+        isFaculty,
+        isStudent,
         switchRole,
         sessions,
         activeSession,
