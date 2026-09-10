@@ -141,7 +141,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
           <div className="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 flex items-center justify-between gap-2 text-xs">
             <div className="leading-tight">
               <span className="font-bold text-blue-800 dark:text-blue-300 block">
-                {activeTab === 'Admin' ? 'Demo Admin Credentials' : 'Demo Student Credentials'}
+                {activeTab === 'Admin' ? 'Demo Admin (Prof. Rupali Kumari - HOD)' : 'Demo Student Credentials'}
               </span>
               <span className="text-[11px] text-blue-600/80 dark:text-blue-400/80">
                 {activeTab === 'Admin'

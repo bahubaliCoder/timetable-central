@@ -15,7 +15,7 @@ import { findTimetableConflicts } from '../utils/conflictChecker';
 
 const AdminContext = createContext();
 
-const STORAGE_PREFIX = 'ttc_gecb_v2_';
+const STORAGE_PREFIX = 'ttc_gecb_v3_';
 
 export const AdminProvider = ({ children }) => {
   // 1. Navigation & Role State
@@ -68,6 +68,7 @@ export const AdminProvider = ({ children }) => {
       const matchRole = !selectedRole || u.role.toLowerCase() === selectedRole.toLowerCase();
       const matchId =
         u.email.toLowerCase() === idClean ||
+        u.altEmail?.toLowerCase() === idClean ||
         u.username?.toLowerCase() === idClean ||
         u.studentId?.toLowerCase() === idClean;
       return matchRole && matchId;

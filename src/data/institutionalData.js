@@ -62,11 +62,11 @@ export const INITIAL_TEACHERS = [
   },
   {
     id: 't-rk',
-    name: 'Asst. Prof. Rupali Kumari',
+    name: 'Prof. Rupali Kumari',
     shortCode: 'RK',
     email: 'rupali.kumari@gecbanka.ac.in',
     department: 'Computer Science & Engineering',
-    designation: 'Assistant Professor',
+    designation: 'Professor & Head of Department (HOD)',
     phone: '+91 98350 11005',
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
     maxHours: 16,
@@ -165,7 +165,7 @@ export const INITIAL_SUBJECTS = [
     credits: 3,
     hoursPerWeek: 3,
     color: '#0891b2', // Cyan
-    facultyName: 'Asst. Prof. Rupali Kumari [RK]',
+    facultyName: 'Prof. Rupali Kumari (HOD) [RK]',
   },
   {
     id: 'sub-cd-lab',
@@ -590,16 +590,17 @@ export const INITIAL_SESSIONS = [
 export const INITIAL_USERS = [
   {
     id: 'u-admin',
-    name: 'Asst. Prof. Ravi Ranjan (Admin)',
+    name: 'Prof. Rupali Kumari (HOD & Admin)',
     email: 'admin@timetablecentral.edu',
+    altEmail: 'rupali.kumari@gecbanka.ac.in',
     username: 'admin',
     password: 'admin123',
     role: 'Admin',
     department: 'Computer Science & Engineering',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
     institution: 'Government Engineering College, Banka',
-    designation: 'Assistant Professor & Timetable Coordinator',
-    phone: '+91 98350 11001',
+    designation: 'Professor, Head of Department (HOD) & Admin',
+    phone: '+91 98350 11005',
   },
   {
     id: 'u-student',
